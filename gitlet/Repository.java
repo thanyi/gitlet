@@ -245,19 +245,17 @@ public class Repository {
      * @param addFileName
      * @apiNote 这个函数用于实现git add
      */
-    public static void addStage(String addFileName) {
+    public static void addStage(String addFileName) throws GitletException{
         /* 如果文件名是空 */
         if (addFileName == null || addFileName.isEmpty()) {
-            System.out.println("Please enter a file name.");
-            exit(0);
+            throw new GitletException("Please enter a file name.");
         }
 
         File fileAdded = join(CWD, addFileName);
         /* 如果在工作目录中不存在此文件 */
 
         if (!fileAdded.exists()) {
-            System.out.println("File does not exist.");
-            exit(0);
+            throw new GitletException("File does not exist.");
         }
         String fileAddedContent = readContentsAsString(fileAdded);
 
@@ -304,18 +302,16 @@ public class Repository {
     /**
      * java gitlet.Main commit [message]
      */
-    public static void commitFile(String commitMsg) {
+    public static void commitFile(String commitMsg) throws GitletException {
         /* 获取addstage中的filename和hashname */
         List<String> addStageFiles = plainFilenamesIn(ADD_STAGE_DIR);
         List<String> removeStageFiles = plainFilenamesIn(REMOVE_STAGE_DIR);
         /* 错误的情况，直接返回 */
         if (addStageFiles.isEmpty() && removeStageFiles.isEmpty()) {
-            System.out.println("No changes added to the commit.");
-            exit(0);
+            throw new GitletException("No changes added to the commit.");
         }
         if (commitMsg == null || commitMsg.isEmpty()) {
-            System.out.println("Please enter a commit message.");
-            exit(0);
+            throw new GitletException("Please enter a commit message.");
         }
 
 
@@ -361,21 +357,17 @@ public class Repository {
      * @param commitMsg
      * @param branchName
      */
-    public static void commitFileForMerge(String commitMsg, String branchName) {
-
-
+    public static void commitFileForMerge(String commitMsg, String branchName) throws GitletException {
         /* 获取addstage中的filename和hashname */
         List<String> addStageFiles = plainFilenamesIn(ADD_STAGE_DIR);
         List<String> removeStageFiles = plainFilenamesIn(REMOVE_STAGE_DIR);
         /* 错误的情况，直接返回 */
         if (addStageFiles.isEmpty() && removeStageFiles.isEmpty()) {
-            System.out.println("No changes added to the commit.");
-            exit(0);
+            throw new GitletException("No changes added to the commit.");
         }
 
         if (commitMsg == null) {
-            System.out.println("Please enter a commit message.");
-            exit(0);
+            throw new GitletException("Please enter a commit message.");
         }
 
         /* 获取最新的commit*/
@@ -444,7 +436,6 @@ public class Repository {
         if (addStageFile.exists()) {
             addStageFile.delete();
         }
-
 
         /* 当此文件正被track中 */
         if (blobMap.containsKey(removeFileName)) {
@@ -792,9 +783,11 @@ public class Repository {
                 }
             }
             if (!isUntrackInBoth) {
-                message("There is an untracked file in the way; "
+//                message("There is an untracked file in the way; "
+//                        + "delete it, or add and commit it first.");
+//                exit(0);
+                throw new GitletException("There is an untracked file in the way; "
                         + "delete it, or add and commit it first.");
-                exit(0);
             }
 
         }
@@ -848,8 +841,7 @@ public class Repository {
         /* 获取当前splitCommit对象 */
         Commit splitCommit = getSplitCommit(headCommit, otherHeadCommit);
         if (splitCommit.getHashName().equals(otherHeadCommit.getHashName())) {
-            message("Given branch is an ancestor of the current branch.");
-            exit(0);
+            throw new GitletException("Given branch is an ancestor of the current branch.");
         }
 
         HashMap<String, String> splitCommitBolbMap = splitCommit.getBlobMap();
@@ -984,8 +976,7 @@ public class Repository {
         List<String> rmStageFiles = plainFilenamesIn(REMOVE_STAGE_DIR);
         /* 如果存在暂存，直接退出 */
         if (!addStageFiles.isEmpty() || !rmStageFiles.isEmpty()) {
-            System.out.println("You have uncommitted changes.");
-            exit(0);
+            throw new GitletException("You have uncommitted changes.");
         }
         Commit headCommit = getHeadCommit();
         // 如果不存在这个branch，则报错
@@ -993,14 +984,12 @@ public class Repository {
         Commit otherHeadCommit = getBranchHeadCommit(branchName, errMsg);
 
         if (getHeadBranchName().equals(branchName)) {
-            System.out.println("Cannot merge a branch with itself.");
-            exit(0);
+            throw new GitletException("Cannot merge a branch with itself.");
         }
         /* 查看是否存在未被跟踪的文件 */
         if (untrackFileExists(headCommit)) {
-            message("There is an untracked file in the way; "
+            throw new GitletException("There is an untracked file in the way; "
                     + "delete it, or add and commit it first.");
-            exit(0);
         }
     }
 }
